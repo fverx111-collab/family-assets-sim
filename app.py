@@ -5,158 +5,81 @@ import plotly.express as px
 from datetime import datetime
 
 # =========================
-# 頁面設定
+# Page Config
 # =========================
 st.set_page_config(
-    page_title="家庭資產成長模擬器",
-    page_icon="📈",
+    page_title="Portfolio Pro Dashboard",
+    page_icon="📊",
     layout="wide"
 )
 
-# =========================
-# 標題
-# =========================
-st.title("📈 家庭資產成長模擬器")
-st.caption("多股票 / ETF 投資配置模擬｜即時股價｜資產成長分析")
+st.title("📊 專業資產配置系統 Portfolio Pro")
+st.caption("ETF / 股票｜動態配置｜即時價格｜資產模擬｜專業投資儀表板")
 
 # =========================
-# 側邊欄
+# Session State（避免重複 key + 支援動態新增刪除）
 # =========================
-st.sidebar.header("⚙️ 投資設定")
+if "assets" not in st.session_state:
+    st.session_state.assets = [
+        {"symbol": "VOO", "weight": 40, "return": 10},
+        {"symbol": "QQQ", "weight": 30, "return": 12},
+        {"symbol": "VTI", "weight": 30, "return": 8}
+    ]
+
+# =========================
+# Sidebar - 基本參數
+# =========================
+st.sidebar.header("⚙️ 基礎設定")
 
 initial_assets = st.sidebar.number_input(
     "初始資產 (元)",
-    min_value=0,
-    value=933796,
-    step=10000
+    0, 100000000, 1000000,
+    key="init"
 )
 
 monthly_invest = st.sidebar.number_input(
-    "每月投入金額 (元)",
-    min_value=0,
-    value=16000,
-    step=1000
+    "每月投入 (元)",
+    0, 1000000, 20000,
+    key="monthly"
 )
 
 years = st.sidebar.slider(
     "投資年限",
-    1,
-    40,
-    15
-)
-
-st.sidebar.divider()
-
-# =========================
-# 股票 / ETF 設定
-# =========================
-st.sidebar.header("📊 股票 / ETF 配置")
-
-asset_count = st.sidebar.number_input(
-    "投資標的數量",
-    min_value=1,
-    max_value=10,
-    value=3
-)
-
-preset_options = [
-    "0050.TW",
-    "006208.TW",
-    "00878.TW",
-    "00919.TW",
-    "0056.TW",
-    "VOO",
-    "QQQ",
-    "SPY",
-    "VTI",
-    "VT",
-    "SCHD",
-    "自訂輸入"
-]
-
-assets = []
-
-# =========================
-# 建立配置
-# =========================
-st.caption("Powered by Streamlit + Yahoo Finance")
-
-# =========================
-# 頁面設定
-# =========================
-st.set_page_config(
-    page_title="家庭資產成長模擬器",
-    page_icon="📈",
-    layout="wide"
+    1, 40, 20,
+    key="years"
 )
 
 # =========================
-# 標題
+# Add Asset
 # =========================
-st.title("📈 家庭資產成長模擬器")
-st.caption("多股票 / ETF 投資配置模擬｜即時股價｜資產成長分析")
+st.sidebar.header("➕ 新增資產")
 
-# =========================
-# 側邊欄
-# =========================
-st.sidebar.header("⚙️ 投資設定")
+new_symbol = st.sidebar.text_input("股票 / ETF 代號", key="new_symbol").upper()
+new_weight = st.sidebar.slider("配置 (%)", 0, 100, 10, key="new_weight")
+new_return = st.sidebar.slider("預估年化 (%)", 0, 30, 10, key="new_return")
 
-initial_assets = st.sidebar.number_input(
-    "初始資產 (元)",
-    min_value=0,
-    value=933796,
-    step=10000
-)
-
-monthly_invest = st.sidebar.number_input(
-    "每月投入金額 (元)",
-    min_value=0,
-    value=16000,
-    step=1000
-)
-
-years = st.sidebar.slider(
-    "投資年限",
-    1,
-    40,
-    15
-)
-
-st.sidebar.divider()
+if st.sidebar.button("新增資產"):
+    if new_symbol:
+        st.session_state.assets.append({
+            "symbol": new_symbol,
+            "weight": new_weight,
+            "return": new_return
+        })
+        st.success(f"已新增 {new_symbol}")
 
 # =========================
-# 股票 / ETF 設定
+# 資產管理（可刪除）
 # =========================
-st.sidebar.header("📊 股票 / ETF 配置")
+st.subheader("📌 資產配置管理")
 
-asset_count = st.sidebar.number_input(
-    "投資標的數量",
-    min_value=1,
-    max_value=10,
-    value=3
-)
+updated_assets = []
 
-preset_options = [
-    "0050.TW",
-    "006208.TW",
-    "00878.TW",
-    "00919.TW",
-    "0056.TW",
-    "VOO",
-    "QQQ",
-    "SPY",
-    "VTI",
-    "VT",
-    "SCHD",
-    "自訂輸入"
-]
+for i, a in enumerate(st.session_state.assets):
+    col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
 
-assets = []
+    with col1:
+        symbol = st.text_input("代號", a["symbol"], key=f"s_{i}")
 
-# =========================
-# 建立配置
-# =========================
-for i in range(asset_count):
-
-    st.sidebar.markdown(f"### 標的 {i+1}")
-st.caption("Powered by Streamlit + Yahoo Finance")
+    with col2:
+        weight = st.slider("權重", 0, 100, a["weight"], key=f"w_{i}")
+st.dataframe(result, use_container_width=True)
