@@ -2,10 +2,6 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 import plotly.express as px
-from datetime import datetimeimport streamlit as st
-import pandas as pd
-import yfinance as yf
-import plotly.express as px
 from datetime import datetime
 
 # =========================
